@@ -1,3 +1,5 @@
 .env
 node_modules
 package-lock.json
+redis-6.0.10
+redis-6.0.10.tar.gz
