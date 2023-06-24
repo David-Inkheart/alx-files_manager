@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import sha1 from 'sha1';
 import dbClient from '../utils/db';
-import token from '../utils/token';
+import tokenUtils from '../utils/token';
 
 class AuthController {
   static async getConnect(req, res) {
@@ -16,14 +16,14 @@ class AuthController {
     const user = await dbClient.findUser({ email });
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
     if (sha1(password) !== user.password) return res.status(401).json({ error: 'Unauthorized' });
-    const newToken = await token.generateToken(user._id);
+    const newToken = await tokenUtils.generateToken(user._id);
     return res.status(200).json({ token: newToken });
   }
 
   static async getDisconnect(req, res) {
-    const tokenValue = await token.retrieveToken(req);
+    const tokenValue = await tokenUtils.retrieveToken(req);
     if (!tokenValue) return res.status(401).json({ error: 'Unauthorized' });
-    await token.revokeToken(req);
+    await tokenUtils.revokeToken(req);
     return res.status(204).end();
   }
 }

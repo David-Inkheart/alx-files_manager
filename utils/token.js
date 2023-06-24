@@ -2,7 +2,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import redisClient from './redis';
 
-class token {
+class tokenUtils {
   static async generateToken(userId) {
     const token = uuidv4();
     await redisClient.set(`auth_${token}`, userId, 86400);
@@ -21,4 +21,4 @@ class token {
   }
 }
 
-export default token;
+export default tokenUtils;

@@ -1,7 +1,7 @@
 import sha1 from 'sha1';
 import { ObjectId } from 'mongodb';
 import dbClient from '../utils/db';
-import token from '../utils/token';
+import tokenUtils from '../utils/token';
 
 class UsersController {
   static async postNew(req, res) {
@@ -20,7 +20,7 @@ class UsersController {
     // console.log(tokenValue);
     if (!tokenValue) return res.status(401).json({ error: 'Unauthorized' });
     // use token.js to retrieve the user ID from the token
-    const userId = await token.retrieveToken(req);
+    const userId = await tokenUtils.retrieveToken(req);
     // console.log(userId);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     const user = await dbClient.findUser({ _id: ObjectId(userId) });
