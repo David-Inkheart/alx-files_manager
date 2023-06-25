@@ -222,7 +222,7 @@ class FilesController {
       return res.status(404).json({ error: 'Not found' });
     }
 
-    const mimeType = mime.contentType(file.name);
+    const mimeType = mime.lookup(file.name);
     res.setHeader('Content-Type', mimeType);
     const readStream = fs.createReadStream(file.localPath);
     readStream.on('error', (err) => {
