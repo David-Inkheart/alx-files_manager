@@ -20,7 +20,7 @@ routes.post('/users', UsersController.postNew);
 routes.post('/files', FilesController.postUpload);
 
 // PUT routes
-// routes.put('/files/:id/publish', FilesController.putPublish);
-// routes.put('/files/:id/unpublish', FilesController.putUnpublish);
+routes.put('/files/:id/publish', FilesController.putPublish);
+routes.put('/files/:id/unpublish', FilesController.putUnpublish);
 
 export default routes;
