@@ -1,13 +1,16 @@
 import { ObjectId } from 'mongodb';
 import mime from 'mime-types';
 import fs from 'fs';
-// import { pipeline } from 'stream';
+import Bull from 'bull';
 import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
 
 const writeFileAsync = promisify(fs.writeFile);
+
+// Create a Bull queue fileQueue
+const thumbnailQueue = new Bull('thumbnailQueue');
 
 class FilesController {
   static async postUpload(req, res) {
@@ -70,6 +73,16 @@ class FilesController {
         parentId: parentId || 0,
         localPath: filePath,
       });
+
+      if (type === 'image') {
+        thumbnailQueue.add({ userId, fileId: newFile.insertedId });
+
+        await dbClient.updateFile({ _id: ObjectId(newFile.insertedId) }, {
+          $set: {
+            localPath: filePath,
+          },
+        });
+      }
 
       return res.status(201).json({
         id: newFile.insertedId,
@@ -203,6 +216,7 @@ class FilesController {
   // eslint-disable-next-line
   static async getFile(req, res) {
     const fileId = req.params.id;
+    const { size } = req.query;
     const file = await dbClient.findFile({ _id: ObjectId(fileId) });
     if (!file) {
       return res.status(404).json({ error: 'Not found' }).end();
@@ -218,13 +232,21 @@ class FilesController {
     if (!userId && !file.isPublic) {
       return res.status(404).json({ error: 'Not found' });
     }
-    if (!file.localPath) {
-      return res.status(404).json({ error: 'Not found' });
+
+    let filePath = file.localPath;
+
+    if (file.type === 'image' && size && ['250', '500', '100'].includes(size)) {
+      filePath = `${file.localPath}_${size}`;
+    }
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Not found' }).end();
     }
 
     const mimeType = mime.lookup(file.name); // mime.contentType(file.name);
     res.setHeader('Content-Type', mimeType);
-    const readStream = fs.createReadStream(file.localPath);
+    const readStream = fs.createReadStream(filePath);
+
     readStream.on('error', (err) => {
       console.log(err);
       res.status(404).json({ error: 'Not found' }).end();
