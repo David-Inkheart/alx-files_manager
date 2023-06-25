@@ -63,7 +63,6 @@ class FilesController {
         localPath: filePath,
       });
 
-      console.log(newFile);
       return res.status(201).json({
         id: newFile.insertedId,
         userId: user._id,
