@@ -81,7 +81,7 @@ class FilesController {
       return res.status(400).json({ error: err.message });
     }
   }
-
+  // eslint-disable-next-line
   static async getShow(req, res) {
     const tokenValue = req.headers['x-token'];
     if (!tokenValue) return res.status(401).json({ error: 'Unauthorized' });
@@ -94,20 +94,23 @@ class FilesController {
 
     const fileId = req.params.id;
     const file = await dbClient.findFile({ _id: ObjectId(fileId) });
-    if (!file) return res.status(404).json({ error: 'Not found' });
-
-    // if (file.userId.toString() !== userId && !file.isPublic) {
-    //   return res.status(404).json({ error: 'Not found' });
-    // }
-
-    return res.status(200).json({
-      id: file._id,
-      userId: file.userId,
-      name: file.name,
-      type: file.type,
-      isPublic: file.isPublic,
-      parentId: file.parentId,
-    });
+    if (!file) {
+      res.status(404).json({ error: 'Not found' }).end();
+    } else if (String(file.userId) !== String(userId)) {
+      res.status(404).json({ error: 'Not found' }).end();
+    } else {
+      // if (file.userId.toString() !== userId && !file.isPublic) {
+      //   return res.status(404).json({ error: 'Not found' });
+      // }
+      return res.status(200).json({
+        id: file._id,
+        userId: file.userId,
+        name: file.name,
+        type: file.type,
+        isPublic: file.isPublic,
+        parentId: file.parentId,
+      });
+    }
   }
 
   static async getIndex(req, res) {
@@ -137,6 +140,9 @@ class FilesController {
     }));
     return res.status(200).json(files);
   }
+
+  // static async putPublish(req, res) {
+  // }
 }
 
 export default FilesController;
