@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import mime from 'mime-types';
-import fs, { ReadStream } from 'fs';
-import { pipeline } from 'stream';
+import fs from 'fs';
+// import { pipeline } from 'stream';
 import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
 import redisClient from '../utils/redis';
@@ -219,7 +219,7 @@ class FilesController {
         const contentType = mime.contentType(file.name);
         return response.header('Content-Type', contentType).status(200).sendFile(fileName);
       } catch (error) {
-        console.log(error);
+        // console.log(error);
         return response.status(404).json({ error: 'Not found' });
       }
     } else {
@@ -240,11 +240,11 @@ class FilesController {
           const contentType = mime.contentType(file.name);
           return response.header('Content-Type', contentType).status(200).sendFile(fileName);
         } catch (error) {
-          console.log(error);
+          // console.log(error);
           return response.status(404).json({ error: 'Not found' });
         }
       } else {
-        console.log(`Wrong user: file.userId=${file.userId}; userId=${user._id}`);
+        // console.log(`Wrong user: file.userId=${file.userId}; userId=${user._id}`);
         return response.status(404).json({ error: 'Not found' });
       }
     }
