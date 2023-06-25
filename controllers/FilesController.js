@@ -1,5 +1,7 @@
 import { ObjectId } from 'mongodb';
-import fs from 'fs';
+import mime from 'mime-types';
+import fs, { ReadStream } from 'fs';
+import { pipeline } from 'stream';
 import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
 import redisClient from '../utils/redis';
@@ -196,6 +198,39 @@ class FilesController {
         parentId: file.parentId,
       });
     }
+  }
+  // eslint-disable-next-line
+  static async getFile(req, res) {
+    const fileId = req.params.id;
+    const file = await dbClient.findFile({ _id: ObjectId(fileId) });
+    if (!file) {
+      res.status(404).json({ error: 'Not found' }).end();
+    }
+    if (file.type === 'folder') {
+      res.status(400).json({ error: 'A folder doesn\'t have content' }).end();
+    }
+    const tokenValue = req.headers['x-token'];
+    if (!tokenValue && !file.isPublic) {
+      return res.status(404).json({ error: 'not found' });
+    }
+    const userId = await redisClient.get(`auth_${tokenValue}`);
+    if (!userId && !file.isPublic) {
+      return res.status(404).json({ error: 'not found' });
+    }
+    // if file is not locally present, return 404
+    if (!file.localPath) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const mimeType = mime.contentType(file.name);
+    res.setHeader('Content-Type', mimeType);
+    const readStream = new ReadStream(file.localPath);
+    pipeline(readStream, res, (err) => {
+      if (err) {
+        console.log(err);
+        res.status(404).json({ error: 'Not found' }).end();
+      }
+    });
   }
 }
 
