@@ -3,6 +3,7 @@ import mime from 'mime-types';
 import fs from 'fs';
 import Bull from 'bull';
 import { promisify } from 'util';
+import { stringify } from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
@@ -33,8 +34,8 @@ class FilesController {
     if (!data && type !== 'folder') return res.status(400).json({ error: 'Missing data' });
 
     if (parentId) {
-      // argument must be a single string id of 12 bytes or a string of 24 hex characters
-      const parent = await dbClient.findFile({ _id: parentId });
+      const id = stringify(ObjectId(parentId));
+      const parent = await dbClient.findFile({ _id: id });
       if (!parent) return res.status(400).json({ error: 'Parent not found' });
       if (parent.type !== 'folder') {
         return res.status(400).json({ error: 'Parent is not a folder' });
