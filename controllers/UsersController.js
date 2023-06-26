@@ -1,7 +1,11 @@
 import sha1 from 'sha1';
+import Bull from 'bull';
 import { ObjectId } from 'mongodb';
 import dbClient from '../utils/db';
 import tokenUtils from '../utils/token';
+
+// instantiate a new Bull queue named userQueue
+const userQueue = new Bull('userQueue');
 
 class UsersController {
   static async postNew(req, res) {
@@ -12,6 +16,10 @@ class UsersController {
     if (user) return res.status(400).json({ error: 'Already exist' });
     const hashPassword = sha1(password);
     const newUser = await dbClient.createUser({ email, password: hashPassword });
+
+    // Add a job to the userQueue for sending a welcome email
+    userQueue.add({ userId: newUser.insertedId });
+
     return res.status(201).json({ id: newUser.insertedId, email });
   }
 

@@ -6,6 +6,7 @@ import { ObjectId } from 'mongodb';
 import dbClient from './utils/db';
 
 const thumbnailQueue = new Bull('thumbnailQueue');
+const userQueue = new Bull('userQueue');
 
 const writeFileAsync = promisify(fs.writeFile);
 
@@ -47,4 +48,20 @@ thumbnailQueue.process(async (job) => {
       },
     });
   }
+});
+
+userQueue.process(async (job) => {
+  const { userId } = job.data;
+
+  if (!userId) {
+    throw new Error('Missing userId');
+  }
+
+  const user = await dbClient.findUser({ _id: ObjectId(userId) });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  console.log(`Welcome ${user.email}!`);
 });
